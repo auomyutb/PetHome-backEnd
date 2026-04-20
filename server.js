@@ -1,53 +1,49 @@
-const dns = require("dns")
-dns.setServers(["8.8.8.8", "1.1.1.1"])
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+const morgan = require('morgan')
+const path = require('path')
+const dns = require('dns')
+require('dotenv').config()
 
-////////////////////////////////////////////
 
-const express = require("express")
+dns.setServers(['8.8.8.8', '1.1.1.1'])
+const PORT = process.env.PORT || 3000
 const app = express()
-const logger = require("morgan")
-const cors = require("cors")
 
-require("dotenv").config()
-require("./db")
-
-const PORT = process.env.PORT || 3229
-
-////////////////////////////////////////////
-
-const authRouter = require("./routes/authRouter")
-const cartRouter = require("./routes/cartRouter")
-const petRouter = require("./routes/petRouter")
-const productRouter = require("./routes/productRouter")
-const reviewRouter = require("./routes/reviewRouter")
-const replyReviewRouter = require("./routes/replyReviewRouter")
-const userRouter = require("./routes/userRouter")
-
-////////////////////////////////////////////
+const authRoutes = require('./routes/auth')
+const petRoutes = require('./routes/pets')
+const donationRoutes = require('./routes/donations')
 
 app.use(cors())
-app.use(logger("dev"))
+app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-////////////////////////////////////////////
+app.use('/auth', authRoutes)
+app.use('/', petRoutes)
+app.use('/donations', donationRoutes)
 
-app.use("/auth", authRouter)
-app.use("/cart", cartRouter)
-app.use("/pet", petRouter)
-app.use("/product", productRouter)
-app.use("/review", reviewRouter)
-app.use("/reply", replyReviewRouter)
-app.use("/user", userRouter)
-
-////////////////////////////////////////////
-
-app.get("/", (req, res) => {
-  res.send("🐾My PetHome server is running")
+app.get('/', (req, res) => {
+  res.send('petHome backend running')
 })
 
-////////////////////////////////////////////
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log('Connected to MongoDB')
+  } catch (error) {
+    console.log('MongoDB connection error:')
+    console.log(error.message)
+  }
+}
+
+connectDB()
+
+
+
 
 app.listen(PORT, () => {
-  console.log(`🚀My PetHome server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
